@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drop a Pin on Alaska</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+4DR2hT2dCjK8zduxyJdEjU8i+Mnh64BttGP5dD14="
+    crossorigin=""
+  />
+  <style>
+    #map { height: 500px; width: 100%; }
+    #form {
+      margin-top: 10px;
+    }
+    label {
+      display: block;
+      margin: 5px 0 2px;
+    }
+    input, button {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Drop a Pin on Alaska</h2>
+  <div id="map"></div>
+  <div id="form" style="display:none;">
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" />
+    <label for="location">Location Name:</label>
+    <input type="text" id="location" />
+    <button onclick="submitPin()">Submit Pin</button>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j8Mk9eW1ng1XYgFJjrb96tQWRLwZ9g1wDQ9C7iI="
+    crossorigin=""
+  ></script>
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbydKiVyqa7qLTmsfOJCqU4kjG4y7vWQeJGFDnAFDutiJf3WVn5jpDGHLWoI1-JnD7wl/exec";
+    let selectedLatLng = null;
+
+    const map = L.map('map').setView([64.2008, -149.4937], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Load existing pins
+    fetch(scriptURL)
+      .then(res => res.json())
+      .then(pins => {
+        pins.forEach(pin => {
+          L.marker([pin.lat, pin.lng])
+            .addTo(map)
+            .bindPopup(`<strong>${pin.name}</strong><br>${pin.location}`);
+        });
+      });
+
+    // On map click
+    map.on('click', function(e) {
+      selectedLatLng = e.latlng;
+      document.getElementById("form").style.display = "block";
+    });
+
+    function submitPin() {
+      const name = document.getElementById("name").value.trim();
+      const location = document.getElementById("location").value.trim();
+
+      if (!name || !location || !selectedLatLng) {
+        alert("Fill in all fields and click the map.");
+        return;
+      }
+
+      const data = {
+        name,
+        location,
+        lat: selectedLatLng.lat,
+        lng: selectedLatLng.lng
+      };
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(() => {
+        alert("Pin submitted!");
+        window.location.reload();
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Something went wrong.");
+      });
+    }
+  </script>
+</body>
+</html>
