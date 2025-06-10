@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drop a Pin on Alaska</title>
+  <style>
+    #map-img {
+      width: 100%;
+      max-width: 800px;
+      border: 2px solid #ccc;
+      position: relative;
+    }
+    #form {
+      margin-top: 10px;
+    }
+    label, input, button {
+      display: block;
+      width: 100%;
+      max-width: 800px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Drop a Pin on Alaska</h2>
+  <img id="map-img" src="alaska.jpeg" alt="Alaska Map" onclick="handleClick(event)" />
+
+  <div id="form" style="display:none;">
+    <label>Your Name:</label>
+    <input type="text" id="name" />
+    <label>Location Name:</label>
+    <input type="text" id="location" />
+    <input type="hidden" id="x" />
+    <input type="hidden" id="y" />
+    <button onclick="submitPin()">Submit</button>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbydKiVyqa7qLTmsfOJCqU4kjG4y7vWQeJGFDnAFDutiJf3WVn5jpDGHLWoI1-JnD7wl/exec";
+
+    function handleClick(event) {
+      const img = event.target;
+      const rect = img.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      document.getElementById("x").value = x.toFixed(2);
+      document.getElementById("y").value = y.toFixed(2);
+      document.getElementById("form").style.display = "block";
+    }
+
+    function submitPin() {
+      const data = {
+        name: document.getElementById("name").value,
+        location: document.getElementById("location").value,
+        lat: document.getElementById("y").value,
+        lng: document.getElementById("x").value
+      };
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(() => {
+        alert("Submitted!");
+        location.reload();
+      })
+      .catch(() => alert("Something went wrong"));
+    }
+  </script>
+</body>
+</html>
